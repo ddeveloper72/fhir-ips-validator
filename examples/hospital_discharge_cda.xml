@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="urn:hl7-org:v3 CDA.xsd">
+  <!-- 
+    eHDSI Hospital Discharge Report CDA Document
+    Test Example for Gazelle EVS Validation
+  -->
+  
+  <!-- Document Header -->
+  <realmCode code="EU"/>
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
+  
+  <!-- Template ID for eHDSI Hospital Discharge Report -->
+  <templateId root="1.3.6.1.4.1.12559.11.10.1.3.1.1.4"/>
+  
+  <id root="2.16.840.1.113883.2.8.3.7" extension="HDR-001"/>
+  
+  <code code="34105-7" codeSystem="2.16.840.1.113883.6.1" 
+        codeSystemName="LOINC" displayName="Hospital discharge summary"/>
+  
+  <title>Hospital Discharge Report</title>
+  
+  <effectiveTime value="20260515100000"/>
+  
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"/>
+  
+  <languageCode code="en-US"/>
+  
+  <!-- Patient Information -->
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.2.8.3.7" extension="87654321"/>
+      
+      <addr use="HP">
+        <streetAddressLine>456 Oak Avenue</streetAddressLine>
+        <city>Cork</city>
+        <postalCode>T12 A3B4</postalCode>
+        <country>IE</country>
+      </addr>
+      
+      <telecom value="tel:+353-21-123-4567" use="HP"/>
+      
+      <patient>
+        <name use="L">
+          <given>Sarah</given>
+          <family>Murphy</family>
+        </name>
+        
+        <administrativeGenderCode code="F" codeSystem="2.16.840.1.113883.5.1" displayName="Female"/>
+        
+        <birthTime value="19680822"/>
+      </patient>
+    </patientRole>
+  </recordTarget>
+  
+  <!-- Document Author -->
+  <author>
+    <time value="20260515100000"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.2.8.3.7" extension="DR002"/>
+      <addr>
+        <streetAddressLine>Cork University Hospital</streetAddressLine>
+        <city>Cork</city>
+        <postalCode>T12 DC4A</postalCode>
+        <country>IE</country>
+      </addr>
+      <telecom value="tel:+353-21-492-0000" use="WP"/>
+      <assignedPerson>
+        <name>
+          <prefix>Dr.</prefix>
+          <given>Patrick</given>
+          <family>Kelly</family>
+        </name>
+      </assignedPerson>
+    </assignedAuthor>
+  </author>
+  
+  <!-- Document Custodian -->
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id root="2.16.840.1.113883.2.8.3.7" extension="ORG002"/>
+        <name>Cork University Hospital</name>
+        <telecom value="tel:+353-21-492-0000" use="WP"/>
+        <addr>
+          <streetAddressLine>Wilton</streetAddressLine>
+          <city>Cork</city>
+          <postalCode>T12 DC4A</postalCode>
+          <country>IE</country>
+        </addr>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+  
+  <!-- Legal Authenticator -->
+  <legalAuthenticator>
+    <time value="20260515100000"/>
+    <signatureCode code="S"/>
+    <assignedEntity>
+      <id root="2.16.840.1.113883.2.8.3.7" extension="DR002"/>
+      <assignedPerson>
+        <name>
+          <prefix>Dr.</prefix>
+          <given>Patrick</given>
+          <family>Kelly</family>
+        </name>
+      </assignedPerson>
+    </assignedEntity>
+  </legalAuthenticator>
+  
+  <!-- Document Body -->
+  <component>
+    <structuredBody>
+      
+      <!-- Reason for Admission -->
+      <component>
+        <section>
+          <code code="42349-1" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="Reason for admission"/>
+          <title>Reason for Admission</title>
+          <text>
+            <paragraph>Patient admitted with chest pain and shortness of breath.</paragraph>
+          </text>
+        </section>
+      </component>
+      
+      <!-- History of Present Illness -->
+      <component>
+        <section>
+          <code code="10164-2" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="History of present illness"/>
+          <title>History of Present Illness</title>
+          <text>
+            <paragraph>
+              58-year-old female presented to emergency department with acute onset chest pain 
+              radiating to left arm, associated with dyspnea. Symptoms started approximately 
+              2 hours prior to arrival. Patient has history of hypertension and type 2 diabetes.
+            </paragraph>
+          </text>
+        </section>
+      </component>
+      
+      <!-- Hospital Course -->
+      <component>
+        <section>
+          <code code="8648-8" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="Hospital course"/>
+          <title>Hospital Course</title>
+          <text>
+            <paragraph>
+              Patient was admitted to the cardiac care unit. ECG showed ST-segment elevation 
+              in leads II, III, and aVF consistent with inferior wall myocardial infarction. 
+              Cardiac enzymes were elevated (Troponin I 2.5 ng/mL).
+            </paragraph>
+            <paragraph>
+              Patient underwent emergency cardiac catheterization which revealed 95% stenosis 
+              of right coronary artery. Successful percutaneous coronary intervention with 
+              drug-eluting stent placement was performed.
+            </paragraph>
+            <paragraph>
+              Post-procedure course was uneventful. Patient remained hemodynamically stable. 
+              Echocardiography showed preserved left ventricular function with EF 55%.
+            </paragraph>
+          </text>
+        </section>
+      </component>
+      
+      <!-- Discharge Medications -->
+      <component>
+        <section>
+          <templateId root="2.16.840.1.113883.10.20.1.8"/>
+          <code code="10183-2" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="Discharge medications"/>
+          <title>Discharge Medications</title>
+          <text>
+            <table>
+              <thead>
+                <tr>
+                  <th>Medication</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Aspirin</td>
+                  <td>75 mg</td>
+                  <td>Once daily</td>
+                  <td>Indefinitely</td>
+                </tr>
+                <tr>
+                  <td>Clopidogrel</td>
+                  <td>75 mg</td>
+                  <td>Once daily</td>
+                  <td>12 months</td>
+                </tr>
+                <tr>
+                  <td>Atorvastatin</td>
+                  <td>80 mg</td>
+                  <td>Once daily at bedtime</td>
+                  <td>Indefinitely</td>
+                </tr>
+                <tr>
+                  <td>Metoprolol</td>
+                  <td>50 mg</td>
+                  <td>Twice daily</td>
+                  <td>Indefinitely</td>
+                </tr>
+                <tr>
+                  <td>Ramipril</td>
+                  <td>5 mg</td>
+                  <td>Once daily</td>
+                  <td>Indefinitely</td>
+                </tr>
+              </tbody>
+            </table>
+          </text>
+        </section>
+      </component>
+      
+      <!-- Discharge Diagnosis -->
+      <component>
+        <section>
+          <code code="11535-2" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="Discharge diagnosis"/>
+          <title>Discharge Diagnosis</title>
+          <text>
+            <list>
+              <item>Acute ST-elevation myocardial infarction (STEMI) - inferior wall</item>
+              <item>Coronary artery disease with successful PCI and stent to RCA</item>
+              <item>Type 2 Diabetes Mellitus</item>
+              <item>Essential Hypertension</item>
+            </list>
+          </text>
+        </section>
+      </component>
+      
+      <!-- Discharge Instructions -->
+      <component>
+        <section>
+          <code code="8653-8" codeSystem="2.16.840.1.113883.6.1" 
+                displayName="Discharge instructions"/>
+          <title>Discharge Instructions</title>
+          <text>
+            <list>
+              <item>Take all medications as prescribed</item>
+              <item>Follow up with cardiologist in 2 weeks</item>
+              <item>Cardiac rehabilitation program enrollment recommended</item>
+              <item>Lifestyle modifications: smoking cessation, low-fat diet, regular exercise</item>
+              <item>Monitor blood glucose and blood pressure daily</item>
+              <item>Seek immediate medical attention if chest pain recurs</item>
+            </list>
+          </text>
+        </section>
+      </component>
+      
+    </structuredBody>
+  </component>
+  
+</ClinicalDocument>

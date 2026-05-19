@@ -1,0 +1,108 @@
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+credentials.json
+api_keys.txt
+secrets/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logging
+logs/
+*.log
+
+# Cache
+.cache/
+*.cache
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Ruff
+.ruff_cache/
+
+# Documentation
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Distribution / Packaging
+*.whl
+
+# Validation Results & Output Files
+validation_reports/
+*.validation.json
+*.validation.xml
+azure_validation_*.json
+validation_response_*.html
+*_discovery_results.json
+validator_page.html
+evs_discovery_results.json
+fhir_r4_discovery_results.json
+
+# Temporary/Test Files
+*_formatted.json
+*_no_profile.json
+*_no_provenance.json
+*_fixed.json
+*_original.json

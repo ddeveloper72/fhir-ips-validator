@@ -1,0 +1,28 @@
+# Core Dependencies
+zeep>=4.2.1
+requests>=2.31.0
+requests-cache>=1.1.0
+
+# FHIR Libraries
+fhir.resources>=7.0.0
+fhirclient>=4.1.0
+
+# Azure Healthcare
+azure-identity>=1.16.0
+
+# Data Processing & Validation
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+lxml>=4.9.0
+xmltodict>=0.13.0
+beautifulsoup4>=4.12.0
+
+# CLI & UI
+click>=8.1.0
+rich>=13.0.0
+tqdm>=4.66.0
+streamlit>=1.32.0
+
+# Logging
+loguru>=0.7.0
+structlog>=23.2.0

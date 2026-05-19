@@ -1,0 +1,44 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-eu-lab-example",
+  "meta": {
+    "profile": [
+      "http://hl7.eu/fhir/laboratory/StructureDefinition/Patient-eu-lab"
+    ]
+  },
+  "identifier": [
+    {
+      "system": "http://example.org/fhir/sid/patients",
+      "value": "123456"
+    }
+  ],
+  "name": [
+    {
+      "family": "Doe",
+      "given": ["John", "Michael"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1985-03-15",
+  "address": [
+    {
+      "use": "home",
+      "type": "both",
+      "line": ["123 Main Street", "Apartment 4B"],
+      "city": "Brussels",
+      "postalCode": "1000",
+      "country": "BE"
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "+32 2 123 4567",
+      "use": "home"
+    },
+    {
+      "system": "email",
+      "value": "john.doe@example.com"
+    }
+  ]
+}
