@@ -95,56 +95,22 @@ import re
 
 def validate_required_secrets():
     """
-    Validate that all required secrets are configured.
-    Returns dict with configuration status and missing keys.
+    No longer validates secrets at startup since all validators are public by default.
+    Azure FHIR is optional and validated only when user tries to use it.
+    Returns empty status to maintain backward compatibility.
     """
-    required_secrets = {
-        'azure': ['AZURE_FHIR_BASE_URL', 'AZURE_FHIR_CLIENT_ID', 'AZURE_FHIR_CLIENT_SECRET', 'AZURE_FHIR_TENANT_ID'],
-        'ehdsi': ['EVS_API_KEY', 'EVS_BASE_URL'],
-        'ehds': ['EHDS_GAZELLE_API_KEY', 'EHDS_GAZELLE_BASE_URL']
-    }
-    
-    status = {}
-    missing = {}
-    
-    for service, keys in required_secrets.items():
-        missing_keys = [key for key in keys if not os.getenv(key)]
-        status[service] = len(missing_keys) == 0
-        if missing_keys:
-            missing[service] = missing_keys
-    
-    return status, missing
+    # All public validators require no configuration
+    # Azure FHIR is optional and validated in sidebar
+    return {}, {}
 
 def check_api_key_expiry():
     """
-    Check if API keys are close to expiry.
-    Returns dict with warnings for keys expiring in < 7 days.
+    No longer checks API key expiry since public validators don't use API keys.
+    Returns empty list to maintain backward compatibility.
     """
-    warnings = []
-    
-    # Check eHDSI key expiry
-    ehdsi_expiry = os.getenv('EVS_API_KEY_EXPIRY_DATE')
-    if ehdsi_expiry:
-        try:
-            expiry_date = datetime.strptime(ehdsi_expiry.split()[0], '%m/%d/%y')
-            days_until_expiry = (expiry_date - datetime.now()).days
-            if days_until_expiry < 7:
-                warnings.append(f"eHDSI API key expires in {days_until_expiry} days")
-        except:
-            pass
-    
-    # Check EHDS key expiry
-    ehds_expiry = os.getenv('EHDS_GAZELLE_API_KEY_EXPIRY_DATE')
-    if ehds_expiry:
-        try:
-            expiry_date = datetime.strptime(ehds_expiry.split()[0], '%m/%d/%y')
-            days_until_expiry = (expiry_date - datetime.now()).days
-            if days_until_expiry < 7:
-                warnings.append(f"EHDS API key expires in {days_until_expiry} days")
-        except:
-            pass
-    
-    return warnings
+    # Public validators (EHDS Matchbox, HAPI FHIR, Gazelle EVS) don't use API keys
+    # Azure FHIR uses OAuth2 tokens (no expiry date in config)
+    return []
 
 def validate_file_size(file_obj) -> tuple:
     """
