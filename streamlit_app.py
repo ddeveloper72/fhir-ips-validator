@@ -650,6 +650,7 @@ else:
 # MAIN CONTENT AREA - File Upload
 # ============================================================================
 st.header("📤 Upload Document")
+st.caption(f"Choose a FHIR bundle (JSON) or CDA document (XML) • Maximum {MAX_FILE_SIZE_MB}MB per file")
 
 # Initialize session state for loaded files
 if 'loaded_file_content' not in st.session_state:
@@ -667,7 +668,7 @@ if 'show_validator_switch_message' not in st.session_state:
 uploaded_file = st.file_uploader(
     label="Choose a FHIR bundle (JSON) or CDA document (XML)",
     type=['json', 'xml'],  # Accept only JSON and XML files
-    help="Upload FHIR R4 IPS bundle (JSON) or CDA document (XML) - validator will auto-select"
+    help=f"Upload FHIR R4 IPS bundle (JSON) or CDA document (XML) - Maximum file size: {MAX_FILE_SIZE_MB}MB"
 )
 
 # Display example file info
