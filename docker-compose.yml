@@ -9,25 +9,17 @@ services:
     ports:
       - "8501:8501"
     environment:
-      # Azure FHIR Service Configuration
+      # Azure FHIR Service Configuration (Optional - for private validation)
+      # Leave empty to use public validators only (EHDS Matchbox, HAPI FHIR, Gazelle EVS)
       - AZURE_FHIR_BASE_URL=${AZURE_FHIR_BASE_URL:-}
       - AZURE_FHIR_CLIENT_ID=${AZURE_FHIR_CLIENT_ID:-}
       - AZURE_FHIR_CLIENT_SECRET=${AZURE_FHIR_CLIENT_SECRET:-}
       - AZURE_FHIR_TENANT_ID=${AZURE_FHIR_TENANT_ID:-}
       
-      # eHDSI Gazelle Configuration
-      - EVS_BASE_URL=${EVS_BASE_URL:-https://gazelle.ehdsi.eu}
-      - EVS_API_KEY=${EVS_API_KEY:-}
-      - EVS_API_KEY_EXPIRY_DATE=${EVS_API_KEY_EXPIRY_DATE:-}
-      
-      # EHDS Gazelle Configuration
-      - EHDS_GAZELLE_BASE_URL=${EHDS_GAZELLE_BASE_URL:-https://ehds.gazelle-platform.net}
-      - EHDS_GAZELLE_API_KEY=${EHDS_GAZELLE_API_KEY:-}
-      - EHDS_GAZELLE_API_KEY_EXPIRY_DATE=${EHDS_GAZELLE_API_KEY_EXPIRY_DATE:-}
-      
       # Application Configuration
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-10}
+      - API_TIMEOUT_SECONDS=${API_TIMEOUT_SECONDS:-60}
     volumes:
       # Mount examples directory (read-only)
       - ./examples:/app/examples:ro

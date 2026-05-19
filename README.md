@@ -186,10 +186,9 @@ Perfect for developers, healthcare professionals, and organizations working with
 #### Prerequisites
 
 - Python 3.12 or higher
-- Azure FHIR credentials (for Azure validation)
-- Gazelle API keys (for Gazelle validation)
+- **Optional:** Azure FHIR credentials (only if you want private validation)
 
-#### Installation
+> 🌐 **Note:** Public validators (EHDS Matchbox, HAPI FHIR, Gazelle EVS) work without any credentials!
 
 #### Installation
 
@@ -215,25 +214,24 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Configure environment variables:**
+4. **Configure environment variables (Optional):**
 
-Create a `.env` file in the root directory:
+Create a `.env` file **only if you have Azure FHIR credentials**:
 
 ```env
-# Azure FHIR Service
+# Azure FHIR Service (Optional - for private validation)
 AZURE_FHIR_BASE_URL=your-fhir-service.fhir.azurehealthcareapis.com
 AZURE_FHIR_CLIENT_ID=your-client-id
 AZURE_FHIR_CLIENT_SECRET=your-client-secret
 AZURE_FHIR_TENANT_ID=your-tenant-id
 
-# eHDSI Gazelle (Original Platform)
-EVS_BASE_URL=https://gazelle.ehdsi.eu
-EVS_API_KEY=your-ehdsi-api-key
-
-# EHDS Gazelle (New Platform)
-EHDS_GAZELLE_BASE_URL=https://ehds.gazelle-platform.net
-EHDS_GAZELLE_API_KEY=your-ehds-api-key
+# Application Configuration
+LOG_LEVEL=INFO
+MAX_FILE_SIZE_MB=10
+API_TIMEOUT_SECONDS=60
 ```
+
+> 🌐 **Skip this step** if you only want to use public validators (EHDS Matchbox, HAPI FHIR, Gazelle EVS)
 
 5. **Run the app:**
 ```bash
@@ -246,40 +244,41 @@ streamlit run streamlit_app.py
 
 ## 🐳 **Deployment Options**
 
-### **Comparison: Demo vs Production**
+### **Comparison: Public Validators vs Docker Deployment**
 
-| Feature | Streamlit Cloud (Demo) | Docker Self-Hosted (Production) |
-|---------|----------------------|--------------------------------|
-| **Deployment Complexity** | ⭐ One-click deploy | ⭐⭐ Docker knowledge required |
-| **API Keys** | ⚠️ Shared (Duncan's) | ✅ Your own |
-| **Cost** | ✅ Free | 💰 Infrastructure + API usage |
-| **Data Privacy** | ⚠️ Processed through shared accounts | ✅ Private (HIPAA/GDPR compliant) |
-| **Rate Limits** | ⚠️ Shared with all users | ✅ No sharing |
-| **Production Ready** | ❌ Demo only | ✅ Yes |
-| **Best For** | Testing, demos, prototyping | Healthcare orgs, production use |
+| Feature | Streamlit Cloud (Demo) | Docker Self-Hosted |
+|---------|----------------------|-------------------|
+| **Deployment Complexity** | ⭐ One-click | ⭐⭐ Docker required |
+| **Validators** | 🌐 All public validators | 🌐 Public + 🔐 Azure FHIR (optional) |
+| **Credentials Required** | ❌ None | ❌ None (Azure optional) |
+| **Cost** | ✅ Free | 💵 Hosting only |
+| **Data Privacy** | ⚠️ Public validators | ✅ Your infrastructure |
+| **Production Ready** | ✅ Yes (public validators) | ✅ Yes (full control) |
+| **Best For** | Testing, demos, education | Healthcare orgs, production |
 
-### **Option 1: Streamlit Cloud (Demo Mode)**
+### **Option 1: Streamlit Cloud (Public Validators)**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://ddeveloper72-fhir-ips-validator-streamlit-app-ocgntm.streamlit.app/)
 
 ✅ **No setup required** - Just click the link above  
 ✅ **Free to use** - No infrastructure costs  
-⚠️ **Demo only** - Uses shared API credentials  
-⚠️ **Not for production data** - Validation processed through shared accounts
+🌐 **Public validators** - EHDS Matchbox, HAPI FHIR, Gazelle EVS  
+🔐 **Optional Azure FHIR** - Provide your own credentials via sidebar
 
-**User-Provided Credentials (Hybrid Mode):**
-- Optionally provide your own API keys via the sidebar (🔑 Provide Your API Keys)
-- Keys stored in browser session only (not saved to disk)
-- Cleared when you close your browser
-- Perfect for testing with your own credentials on the demo site
+**Features:**
+- All public validators work immediately
+- Optionally provide Azure FHIR credentials (stored in browser session only)
+- Perfect for testing, demos, and education
+- Suitable for non-sensitive data validation
 
-### **Option 2: Docker Self-Hosted (Production Mode)**
+### **Option 2: Docker Self-Hosted**
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://hub.docker.com/)
 
 ✅ **Full control** - Deploy in your infrastructure  
-✅ **Private validation** - All data stays in your environment  
-✅ **Your API keys** - No sharing, no rate limits  
+✅ **Public validators included** - Works immediately  
+✅ **Optional Azure FHIR** - Add your credentials for private validation  
+✅ **Production ready** - HIPAA/GDPR compliant when using Azure FHIR  
 ✅ **HIPAA/GDPR compliant** - Suitable for healthcare data
 
 #### **Quick Start**

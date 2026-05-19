@@ -37,6 +37,8 @@ env/
 .env
 .env.local
 .env.*.local
+.env.backup
+.env.*
 *.env
 credentials.json
 api_keys.txt
