@@ -27,6 +27,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import time
 import traceback
+import threading
 
 # Add scripts directory to path so we can import validation functions
 sys.path.insert(0, str(Path(__file__).parent / "scripts"))
@@ -442,6 +443,25 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ============================================================================
+# STARTUP VALIDATION
+# ============================================================================
+# Check required secrets configuration
+config_status, missing_keys = validate_required_secrets()
+
+# Show warnings for missing configurations (don't block app)
+if missing_keys:
+    st.warning("⚠️ Some validation services are not configured:")
+    for service, keys in missing_keys.items():
+        st.caption(f"**{service.upper()}**: Missing {', '.join(keys)}")
+    st.caption("Add these to your `.streamlit/secrets.toml` or `.env` file to enable all validators.")
+
+# Check API key expiry
+expiry_warnings = check_api_key_expiry()
+if expiry_warnings:
+    for warning in expiry_warnings:
+        st.warning(f"⚠️ {warning}")
 
 
 # ============================================================================
