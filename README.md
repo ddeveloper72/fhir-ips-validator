@@ -18,13 +18,28 @@ No installation required! Upload your FHIR bundle (JSON) or CDA document (XML) a
 
 ## 📋 **Overview**
 
-This web application provides **comprehensive validation** for healthcare interoperability documents using three industry-standard validation services:
+This web application provides **comprehensive validation** for healthcare interoperability documents using **free public validation services** and optional private Azure integration:
 
-- ✅ **Azure FHIR Service** - Validates FHIR R4 bundles against Microsoft Azure Health Data Services
-- ✅ **EHDS Matchbox** - Validates FHIR IPS bundles with 21 specialized profiles
-- ✅ **Gazelle EVS** - Validates CDA documents using eHDSI and EHDS platforms (49+ validators)
+### 🌐 **Public Validators** (No Registration Required)
+- ✅ **EHDS Matchbox** - Specialized FHIR IPS validation with 21 profiles (**Default**)
+- ✅ **HAPI FHIR Public Server** - Generic FHIR R4 validation (file size limit ~50KB)
+- ✅ **Gazelle EVS** - CDA document validation using eHDSI and EHDS platforms (49+ validators)
+
+### 🔐 **Optional Private Validator**
+- 🔒 **Azure FHIR Service** - HIPAA/GDPR compliant validation (requires your Azure credentials)
 
 Perfect for developers, healthcare professionals, and organizations working with **FHIR International Patient Summary (IPS)** or **Clinical Document Architecture (CDA)** standards.
+
+---
+
+## 🎯 **Which Validator Should I Use?**
+
+| Use Case | Recommended Validator | Why? |
+|----------|---------------------|------|
+| **Testing/IPS** | 🌐 **EHDS Matchbox** (Default) | Free, IPS-specific, 21 profiles, handles large files |
+| **Small FHIR** | 🌐 **HAPI FHIR (Public)** | Free, generic FHIR, ~50KB limit |
+| **CDA Documents** | 🌐 **Gazelle EVS** | 49+ validators for eHDSI/EHDS |
+| **Production/HIPAA** | 🔒 **Azure FHIR** | Private, compliant, requires credentials |
 
 Perfect for developers, healthcare professionals, and organizations working with **FHIR International Patient Summary (IPS)** or **Clinical Document Architecture (CDA)** standards.
 
@@ -43,14 +58,37 @@ Perfect for developers, healthcare professionals, and organizations working with
   - JSON/XML format validation (shows line-specific errors)
   - Automatic format detection and validator switching
 
-### 🔍 **Three Validation Services**
+### 🔍 **Four Validation Services**
 
-#### 1. **Azure FHIR Service** (JSON Only)
-- Validates FHIR R4 resources via Azure Health Data Services
+#### 1. **EHDS Matchbox FHIR IPS Validator** (JSON Only) 🌐 **DEFAULT**
+- **FREE & Public** - No registration or API keys required
+- Specialized FHIR IPS validation with **21 profiles**:
+  - Bundle (IPS) 1.1.0 and 2.0.0
+  - Patient, AllergyIntolerance, Condition, Device, etc.
+- Validates specific IPS sections (Medication Summary, Allergies, Problem List, etc.)
+- ✅ Handles large files (tested up to 10MB)
+- Fast validation (~10 seconds)
+- Human-readable diagnostic messages
+- Best for: **IPS-specific validation** (recommended)
+
+#### 2. **HAPI FHIR Public Server** (JSON Only) 🌐 **ALTERNATIVE**
+- **FREE & Anonymous** - No registration or API keys required
+- Validates FHIR R4 resources via http://hapi.fhir.org
 - REST API-based validation
-- Best for: Generic FHIR bundle validation
+- Fast validation (<5 seconds)
+- ⚠️ **File size limit: ~50KB** (public server constraint)
+- Best for: Small FHIR resources, quick checks
+- **Not suitable for typical IPS bundles** (usually >100KB)
 
-#### 2. **EHDS Matchbox FHIR IPS Validator** (JSON Only)
+#### 3. **Azure FHIR Service** (JSON Only) 🔒 **OPTIONAL**
+- **HIPAA/GDPR compliant** - Requires your Azure credentials
+- Validates FHIR R4 resources via Azure Health Data Services
+- OAuth2-based authentication
+- Private validation in your own Azure environment
+- Best for: Production use, sensitive patient data
+- 💡 **Setup:** Provide credentials in sidebar or deploy via Docker
+
+#### 3. **EHDS Matchbox FHIR IPS Validator** (JSON Only) 🌐 **PUBLIC**
 - Specialized FHIR IPS validation with **21 profiles**:
   - Bundle (IPS) 1.1.0 and 2.0.0
   - Patient (IPS)
@@ -87,7 +125,8 @@ Perfect for developers, healthcare professionals, and organizations working with
 - Fast validation (~10 seconds)
 - Human-readable diagnostic messages
 
-#### 3. **Gazelle EVS** (XML Only)
+#### 4. **Gazelle EVS** (XML Only) 🌐 **PUBLIC**
+- **FREE & Anonymous** - No registration required
 - **Two platforms:**
   - **eHDSI Gazelle** (49 validators): Wave 7-10, Cross-border eHealth
   - **EHDS Gazelle** (32 validators): Modern HL7 EU standards
@@ -202,6 +241,83 @@ streamlit run streamlit_app.py
 ```
 
 6. **Open your browser:** http://localhost:8501
+
+---
+
+## 🐳 **Deployment Options**
+
+### **Comparison: Demo vs Production**
+
+| Feature | Streamlit Cloud (Demo) | Docker Self-Hosted (Production) |
+|---------|----------------------|--------------------------------|
+| **Deployment Complexity** | ⭐ One-click deploy | ⭐⭐ Docker knowledge required |
+| **API Keys** | ⚠️ Shared (Duncan's) | ✅ Your own |
+| **Cost** | ✅ Free | 💰 Infrastructure + API usage |
+| **Data Privacy** | ⚠️ Processed through shared accounts | ✅ Private (HIPAA/GDPR compliant) |
+| **Rate Limits** | ⚠️ Shared with all users | ✅ No sharing |
+| **Production Ready** | ❌ Demo only | ✅ Yes |
+| **Best For** | Testing, demos, prototyping | Healthcare orgs, production use |
+
+### **Option 1: Streamlit Cloud (Demo Mode)**
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://ddeveloper72-fhir-ips-validator-streamlit-app-ocgntm.streamlit.app/)
+
+✅ **No setup required** - Just click the link above  
+✅ **Free to use** - No infrastructure costs  
+⚠️ **Demo only** - Uses shared API credentials  
+⚠️ **Not for production data** - Validation processed through shared accounts
+
+**User-Provided Credentials (Hybrid Mode):**
+- Optionally provide your own API keys via the sidebar (🔑 Provide Your API Keys)
+- Keys stored in browser session only (not saved to disk)
+- Cleared when you close your browser
+- Perfect for testing with your own credentials on the demo site
+
+### **Option 2: Docker Self-Hosted (Production Mode)**
+
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://hub.docker.com/)
+
+✅ **Full control** - Deploy in your infrastructure  
+✅ **Private validation** - All data stays in your environment  
+✅ **Your API keys** - No sharing, no rate limits  
+✅ **HIPAA/GDPR compliant** - Suitable for healthcare data
+
+#### **Quick Start**
+
+```bash
+# 1. Clone repository
+git clone https://github.com/ddeveloper72/fhir-ips-validator.git
+cd fhir-ips-validator
+
+# 2. Configure credentials
+cp .env.example .env
+# Edit .env with your API keys
+
+# 3. Start with Docker Compose
+docker-compose up -d
+
+# 4. Open browser
+http://localhost:8501
+```
+
+#### **Docker Features**
+
+- ✅ Multi-stage build for minimal image size
+- ✅ Non-root user for security
+- ✅ Health checks built-in
+- ✅ Environment-based configuration
+- ✅ Volume mounting for example files
+- ✅ Ready for Kubernetes deployment
+
+#### **Full Documentation**
+
+📖 See **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** for complete guide including:
+- Prerequisites and API key setup
+- docker-compose deployment
+- Kubernetes deployment examples
+- AWS/Azure/GCP deployment guides
+- Security best practices
+- Monitoring and troubleshooting
 
 ---
 

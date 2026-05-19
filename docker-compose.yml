@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  fhir-validator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fhir-ips-validator
+    ports:
+      - "8501:8501"
+    environment:
+      # Azure FHIR Service Configuration
+      - AZURE_FHIR_BASE_URL=${AZURE_FHIR_BASE_URL:-}
+      - AZURE_FHIR_CLIENT_ID=${AZURE_FHIR_CLIENT_ID:-}
+      - AZURE_FHIR_CLIENT_SECRET=${AZURE_FHIR_CLIENT_SECRET:-}
+      - AZURE_FHIR_TENANT_ID=${AZURE_FHIR_TENANT_ID:-}
+      
+      # eHDSI Gazelle Configuration
+      - EVS_BASE_URL=${EVS_BASE_URL:-https://gazelle.ehdsi.eu}
+      - EVS_API_KEY=${EVS_API_KEY:-}
+      - EVS_API_KEY_EXPIRY_DATE=${EVS_API_KEY_EXPIRY_DATE:-}
+      
+      # EHDS Gazelle Configuration
+      - EHDS_GAZELLE_BASE_URL=${EHDS_GAZELLE_BASE_URL:-https://ehds.gazelle-platform.net}
+      - EHDS_GAZELLE_API_KEY=${EHDS_GAZELLE_API_KEY:-}
+      - EHDS_GAZELLE_API_KEY_EXPIRY_DATE=${EHDS_GAZELLE_API_KEY_EXPIRY_DATE:-}
+      
+      # Application Configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-10}
+    volumes:
+      # Mount examples directory (read-only)
+      - ./examples:/app/examples:ro
+      
+      # Optional: Mount custom examples or test data
+      # - ./custom-examples:/app/custom-examples:ro
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Optional: Add volumes for persistence if needed
+# volumes:
+#   validation-cache:
+#     driver: local
