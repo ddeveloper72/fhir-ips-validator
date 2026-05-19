@@ -56,6 +56,16 @@ except ImportError as e:
     AZURE_AVAILABLE = False
 
 try:
+    from validate_with_hapi_fhir import (
+        validate_with_hapi_fhir as validate_hapi,
+        parse_operation_outcome as parse_hapi_outcome
+    )
+    HAPI_AVAILABLE = True
+except ImportError as e:
+    st.error(f"⚠️ HAPI FHIR validation not available: {e}")
+    HAPI_AVAILABLE = False
+
+try:
     from validate_with_matchbox import (
         validate_fhir_with_matchbox,
         get_available_profiles,
@@ -475,25 +485,33 @@ Validate FHIR R4 International Patient Summary (IPS) bundles and CDA documents u
 - **EHDS Gazelle** - Modern HL7 EU standards (IPS, EU-EPS, EU Base & Core)
 """)
 
-# Check if user is using demo credentials (no user-provided keys)
-using_demo_mode = (
-    not st.session_state.get('user_azure_secret') and
-    not st.session_state.get('user_ehdsi_key') and
-    not st.session_state.get('user_ehds_key')
-)
+# Check validation mode
+using_public_validators = not st.session_state.get('user_azure_secret')
 
-if using_demo_mode:
-    st.warning("""
-    ⚠️ **DEMO MODE** - You are using shared API credentials.
+if using_public_validators:
+    st.info("""
+    🌐 **PUBLIC VALIDATION MODE** - Using free public FHIR validators.
     
-    **For production use:**
-    - Provide your own API keys in the sidebar (🔑 Provide Your API Keys)
-    - Or deploy your own instance using Docker (see [README](https://github.com/ddeveloper72/fhir-ips-validator#-docker-deployment))
+    **Current validators:**
+    - 🎯 **EHDS Matchbox** (ehds.gazelle-platform.net) - IPS-specific, **RECOMMENDED**
+    - 🌐 **HAPI FHIR** (http://hapi.fhir.org) - Generic FHIR (~50KB limit)
+    - 🌐 **Gazelle EVS** (gazelle.ehdsi.eu) - Public CDA validator
     
-    **Limitations in demo mode:**
-    - Shared rate limits with all users
-    - Your validation data is processed through shared accounts
-    - Not suitable for production or sensitive data
+    **✅ Suitable for:**
+    - Testing and development
+    - Educational purposes
+    - IPS validation (EHDS Matchbox)
+    - Non-sensitive validation
+    
+    **🔐 For production/sensitive data:**
+    - Use your own Azure FHIR service (sidebar: 🔐 Azure FHIR)
+    - Or deploy your own instance using [Docker](https://github.com/ddeveloper72/fhir-ips-validator#-docker-deployment)
+    """)
+else:
+    st.success("""
+    🔐 **PRIVATE VALIDATION MODE** - Using your Azure FHIR service.
+    
+    ✅ Suitable for production and sensitive data (HIPAA/GDPR compliant)
     """)
 
 st.divider()  # Horizontal line
@@ -513,55 +531,50 @@ ehds_configured = bool(os.getenv('EHDS_GAZELLE_API_KEY'))
 # Show configuration status
 st.sidebar.subheader("🔐 Authentication Status")
 
-# Initialize session state for user-provided credentials
+# Initialize session state for user-provided credentials (Azure FHIR only)
 if 'user_azure_secret' not in st.session_state:
     st.session_state['user_azure_secret'] = ''
-if 'user_ehdsi_key' not in st.session_state:
-    st.session_state['user_ehdsi_key'] = ''
-if 'user_ehds_key' not in st.session_state:
-    st.session_state['user_ehds_key'] = ''
 
 # Check both environment and user-provided credentials
 azure_env_configured = bool(os.getenv('AZURE_FHIR_BASE_URL'))
 azure_configured = azure_env_configured or bool(st.session_state.get('user_azure_secret'))
 
-ehdsi_env_configured = bool(os.getenv('EVS_API_KEY'))
-ehdsi_configured = ehdsi_env_configured or bool(st.session_state.get('user_ehdsi_key'))
+# Gazelle services are public (no auth required)
+ehdsi_configured = True  # Public SOAP service
+ehds_configured = True   # Public REST service
 
-ehds_env_configured = bool(os.getenv('EHDS_GAZELLE_API_KEY'))
-ehds_configured = ehds_env_configured or bool(st.session_state.get('user_ehds_key'))
+# Show validator availability
+st.sidebar.success("✅ EHDS Matchbox (Public) - IPS-specific, no limits")
+st.sidebar.info("ℹ️ HAPI FHIR (Public) - File size limit (~50KB)")
+st.sidebar.success("✅ Gazelle EVS (Public) - No auth required")
 
 if azure_configured:
-    st.sidebar.success("✅ Azure FHIR configured")
+    source = "user-provided" if st.session_state.get('user_azure_secret') else "configured"
+    st.sidebar.success(f"✅ Azure FHIR ({source})")
 else:
-    st.sidebar.warning("⚠️ Azure FHIR not configured")
+    st.sidebar.info("ℹ️ Azure FHIR - Optional (provide your own)")
 
-if ehdsi_configured:
-    st.sidebar.success("✅ eHDSI Gazelle configured")
-else:
-    st.sidebar.warning("⚠️ eHDSI Gazelle not configured")
-
-if ehds_configured:
-    st.sidebar.success("✅ EHDS Gazelle configured")
-else:
-    st.sidebar.warning("⚠️ EHDS Gazelle not configured")
-
-# Add user credential input section
-with st.sidebar.expander("🔑 Provide Your API Keys", expanded=False):
+# Add Azure FHIR credential input (optional for private validation)
+with st.sidebar.expander("🔐 Azure FHIR (Optional)", expanded=False):
     st.markdown("""
-    **Optional:** Provide your own API credentials for validation services.
+    **Optional:** Use your own private Azure FHIR service for production validation.
+    
+    💡 **Why provide your own?**
+    - Private validation (HIPAA/GDPR compliant)
+    - Production-ready with Azure SLA
+    - No data leaves your Azure environment
+    
+    🔓 **Default:** Public HAPI FHIR server (suitable for testing)
     
     ⚠️ **Privacy Note:**
-    - Keys are stored in your browser session only
-    - Not saved to disk or database
+    - Credentials stored in browser session only
+    - Never saved to disk or shared
     - Cleared when you close your browser
-    - Never shared or logged
     """)
     
     st.markdown("---")
     
     # Azure FHIR Credentials
-    st.markdown("**Azure FHIR Service**")
     user_azure_base = st.text_input(
         "Azure FHIR Base URL",
         value=st.session_state.get('user_azure_base', ''),
@@ -594,69 +607,33 @@ with st.sidebar.expander("🔑 Provide Your API Keys", expanded=False):
     
     st.markdown("---")
     
-    # eHDSI Gazelle Credentials
-    st.markdown("**eHDSI Gazelle**")
-    user_ehdsi_key = st.text_input(
-        "eHDSI API Key",
-        value="",
-        type="password",
-        placeholder="Enter your API key...",
-        help="From gazelle.ehdsi.eu (not stored)",
-        key="input_ehdsi_key"
-    )
-    
-    st.markdown("---")
-    
-    # EHDS Gazelle Credentials
-    st.markdown("**EHDS Gazelle**")
-    user_ehds_key = st.text_input(
-        "EHDS API Key",
-        value="",
-        type="password",
-        placeholder="Enter your API key...",
-        help="From ehds.gazelle-platform.net (not stored)",
-        key="input_ehds_key"
-    )
-    
-    st.markdown("---")
-    
-    # Apply button to save credentials to session state
-    if st.button("💾 Apply Credentials", use_container_width=True):
-        # Store in session state
-        if user_azure_base:
+    # Apply button
+    if st.button("💾 Apply Azure Credentials", use_container_width=True):
+        if user_azure_base and user_azure_client_id and user_azure_secret and user_azure_tenant:
             st.session_state['user_azure_base'] = user_azure_base
-            os.environ['AZURE_FHIR_BASE_URL'] = user_azure_base
-        if user_azure_client_id:
             st.session_state['user_azure_client_id'] = user_azure_client_id
-            os.environ['AZURE_FHIR_CLIENT_ID'] = user_azure_client_id
-        if user_azure_secret:
             st.session_state['user_azure_secret'] = user_azure_secret
-            os.environ['AZURE_FHIR_CLIENT_SECRET'] = user_azure_secret
-        if user_azure_tenant:
             st.session_state['user_azure_tenant'] = user_azure_tenant
+            
+            os.environ['AZURE_FHIR_BASE_URL'] = user_azure_base
+            os.environ['AZURE_FHIR_CLIENT_ID'] = user_azure_client_id
+            os.environ['AZURE_FHIR_CLIENT_SECRET'] = user_azure_secret
             os.environ['AZURE_FHIR_TENANT_ID'] = user_azure_tenant
-        if user_ehdsi_key:
-            st.session_state['user_ehdsi_key'] = user_ehdsi_key
-            os.environ['EVS_API_KEY'] = user_ehdsi_key
-        if user_ehds_key:
-            st.session_state['user_ehds_key'] = user_ehds_key
-            os.environ['EHDS_GAZELLE_API_KEY'] = user_ehds_key
-        
-        st.success("✅ Credentials applied to current session!")
-        st.info("💡 These credentials will be used for validation until you close your browser.")
-        st.rerun()
+            
+            st.success("✅ Azure credentials applied!")
+            st.info("💡 'Azure FHIR' validator will now use your private server.")
+            st.rerun()
+        else:
+            st.error("❌ All fields are required")
     
     # Clear credentials button
-    if st.button("🗑️ Clear Session Credentials", use_container_width=True):
-        # Clear session state
+    if st.button("🗑️ Clear Azure Credentials", use_container_width=True):
         st.session_state['user_azure_base'] = ''
         st.session_state['user_azure_client_id'] = ''
         st.session_state['user_azure_secret'] = ''
         st.session_state['user_azure_tenant'] = ''
-        st.session_state['user_ehdsi_key'] = ''
-        st.session_state['user_ehds_key'] = ''
         
-        st.success("✅ Session credentials cleared!")
+        st.success("✅ Azure credentials cleared! Using public validators.")
         st.rerun()
 
 st.sidebar.divider()
@@ -665,8 +642,8 @@ st.sidebar.divider()
 st.sidebar.subheader("🎯 Select Validator")
 
 # Determine default index based on recommended validator
-validator_options = ["Azure FHIR", "EHDS Matchbox (FHIR IPS)", "Gazelle EVS"]
-default_index = 0
+validator_options = ["EHDS Matchbox (FHIR IPS)", "HAPI FHIR (Public)", "Azure FHIR (Private)", "Gazelle EVS"]
+default_index = 0  # Default to EHDS Matchbox
 if st.session_state.get('recommended_validator') in validator_options:
     default_index = validator_options.index(st.session_state['recommended_validator'])
 
@@ -745,29 +722,45 @@ Permissive: Basic CDA R2 structure validation - more lenient, higher pass rate."
         """)
 
 # Show validator info
-if validator_choice == "Azure FHIR":
+if validator_choice == "EHDS Matchbox (FHIR IPS)":
     st.sidebar.info("""
-    **Azure FHIR Service**
-    - ✅ FHIR R4 bundles (JSON only)
+    **EHDS Matchbox (IPS Validator)** 🌐 **RECOMMENDED**
+    - **FREE & Public** - No registration or API keys
+    - ✅ FHIR R4 IPS bundles (JSON only)
+    - ✅ 21 IPS profiles (HL7 UV IPS 1.1.0 & 2.0.0)
+    - ✅ Handles large files (tested up to 10MB)
     - ❌ Cannot validate CDA/XML
-    - REST API-based
+    - REST API-based (~10 seconds)
+    - **Use with:** Diana Ferreira Bundle, Patrick Murphy Bundle
+    - **Server:** ehds.gazelle-platform.net
+    
+    🎯 Best for IPS-specific validation
+    """)
+elif validator_choice == "HAPI FHIR (Public)":
+    st.sidebar.warning("""
+    **HAPI FHIR (Public Test Server)**
+    - 🌐 Free & anonymous (no registration)
+    - ✅ FHIR R4 bundles (JSON only)
+    - ⚠️ **File size limit: ~50KB** (public server constraint)
+    - ❌ Cannot validate CDA/XML
+    - REST API-based (<5 seconds)
+    - **Server:** http://hapi.fhir.org/baseR4
+    
+    ⚠️ Most IPS bundles exceed 50KB - use EHDS Matchbox instead
+    """)
+elif validator_choice == "Azure FHIR (Private)":
+    st.sidebar.info("""
+    **Azure FHIR Service (Private)**
+    - 🔐 HIPAA/GDPR compliant (production-ready)
+    - ✅ FHIR R4 bundles (JSON only)
+    - ✅ No file size limits
+    - ❌ Cannot validate CDA/XML
+    - OAuth2 authentication required
     - Fast validation (<5 seconds)
     - **Use with:** Diana Ferreira Bundle, Patrick Murphy Bundle
     
-    💡 Upload an XML file to auto-switch to Gazelle
-    """)
-elif validator_choice == "EHDS Matchbox (FHIR IPS)":
-    st.sidebar.info("""
-    **EHDS Matchbox (IPS Validator)**
-    - ✅ FHIR R4 bundles (JSON only)
-    - ✅ IPS (International Patient Summary) profiles
-    - ✅ HL7 UV IPS 1.1.0 and 2.0.0
-    - ❌ Cannot validate CDA/XML
-    - REST API-based
-    - Fast validation (~10 seconds)
-    - **Use with:** Diana Ferreira Bundle, Patrick Murphy Bundle
-    
-    💡 Upload an XML file to auto-switch to Gazelle EVS
+    ⚠️ Requires Azure FHIR credentials (see sidebar above)
+    💡 For production/sensitive data
     """)
 else:
     if gazelle_platform == "eHDSI Gazelle":
@@ -808,8 +801,9 @@ if 'loaded_file_content' not in st.session_state:
     st.session_state['loaded_file_name'] = None
 
 # Initialize session state for validator auto-switching
+# Initialize recommended validator in session state
 if 'recommended_validator' not in st.session_state:
-    st.session_state['recommended_validator'] = 'Azure FHIR'  # Default
+    st.session_state['recommended_validator'] = 'EHDS Matchbox (FHIR IPS)'  # Default to public IPS validator
 if 'show_validator_switch_message' not in st.session_state:
     st.session_state['show_validator_switch_message'] = False
 
@@ -953,13 +947,13 @@ elif st.session_state['loaded_file_content'] is not None:
 if file_to_process is not None:
     # Auto-switch validator based on file type
     if file_name.endswith('.json'):
-        recommended = 'Azure FHIR'
-        reason = 'JSON format → Azure FHIR (FHIR R4 bundles)'
+        recommended = 'EHDS Matchbox (FHIR IPS)'
+        reason = 'JSON format → EHDS Matchbox (IPS-specific public validation)'
     elif file_name.endswith('.xml'):
         recommended = 'Gazelle EVS'
         reason = 'XML format → Gazelle EVS (CDA documents)'
     else:
-        recommended = st.session_state.get('recommended_validator', 'Azure FHIR')
+        recommended = st.session_state.get('recommended_validator', 'EHDS Matchbox (FHIR IPS)')
         reason = None
     
     # Update recommendation if it changed
@@ -1091,9 +1085,98 @@ if file_to_process is not None:
                 with st.spinner(f"⏳ Validating with {validator_choice}..."):
                     
                     # ========================================================
+                    # HAPI FHIR PUBLIC VALIDATION
+                    # ========================================================
+                    if validator_choice == "HAPI FHIR (Public)":
+                        if not HAPI_AVAILABLE:
+                            st.error("❌ HAPI FHIR validation not available. Check configuration.")
+                        elif not file_name.endswith('.json'):
+                            st.warning("⚠️ HAPI FHIR requires FHIR bundles in JSON format.")
+                            st.info("""
+                            **Try one of the FHIR bundle examples:**
+                            - Diana Ferreira Bundle
+                            - Patrick Murphy Bundle
+                            
+                            Or switch to **Gazelle EVS** validator in the sidebar for CDA/XML documents.
+                            """)
+                        else:
+                            # Call the HAPI FHIR validation function
+                            result = validate_hapi(tmp_path)
+                            
+                            if result:
+                                st.success("✅ Validation completed using public HAPI FHIR server!")
+                                st.info("🌐 Validated using http://hapi.fhir.org/baseR4 (public test server)")
+                                
+                                # Display results in tabs
+                                tab1, tab2, tab3 = st.tabs(["📊 Summary", "📄 Full Response", "📥 Download"])
+                                
+                                with tab1:
+                                    # Parse and display validation results
+                                    error_count = len(result.get('errors', []))
+                                    warning_count = len(result.get('warnings', []))
+                                    info_count = len(result.get('information', []))
+                                    
+                                    # Show summary metrics
+                                    col1, col2, col3 = st.columns(3)
+                                    with col1:
+                                        st.metric("❌ Errors", error_count)
+                                    with col2:
+                                        st.metric("⚠️ Warnings", warning_count)
+                                    with col3:
+                                        st.metric("ℹ️ Info", info_count)
+                                    
+                                    st.divider()
+                                    
+                                    # Overall status
+                                    if error_count == 0:
+                                        st.success("🎉 **Validation passed!** No errors found.")
+                                    else:
+                                        st.error(f"❌ **Validation failed** - {error_count} error(s) found")
+                                    
+                                    # Show detailed issues (same as Azure FHIR)
+                                    if error_count > 0:
+                                        st.subheader("❌ Errors")
+                                        for i, error in enumerate(result['errors'], 1):
+                                            code = error.get('code', 'unknown')
+                                            diagnostics = error.get('diagnostics', 'No details')
+                                            
+                                            with st.expander(f"❌ Error {i}: {code}", expanded=True):
+                                                st.error(f"**Issue:** {diagnostics}")
+                                                
+                                                if error.get('expression'):
+                                                    st.code(' → '.join(error['expression']), language='text')
+                                                    st.caption("📍 FHIR Path to the issue")
+                                    
+                                    if warning_count > 0:
+                                        st.subheader("⚠️ Warnings")
+                                        for i, warning in enumerate(result['warnings'], 1):
+                                            code = warning.get('code', 'unknown')
+                                            diagnostics = warning.get('diagnostics', 'No details')
+                                            
+                                            with st.expander(f"⚠️ Warning {i}: {code}"):
+                                                st.warning(f"**Issue:** {diagnostics}")
+                                                
+                                                if warning.get('expression'):
+                                                    st.code(' → '.join(warning['expression']), language='text')
+                                
+                                with tab2:
+                                    st.json(result.get('raw_response', {}))
+                                
+                                with tab3:
+                                    result_json = json.dumps(result, indent=2)
+                                    st.download_button(
+                                        label="📥 Download Validation Report (JSON)",
+                                        data=result_json,
+                                        file_name=f"hapi_validation_{file_name}.json",
+                                        mime="application/json"
+                                    )
+                            else:
+                                st.error("❌ HAPI FHIR validation failed. See console for details.")
+                    
+                    # ========================================================
                     # AZURE FHIR VALIDATION
                     # ========================================================
-                    if validator_choice == "Azure FHIR":
+                    elif validator_choice == "Azure FHIR (Private)":
                         if not AZURE_AVAILABLE:
                             st.error("❌ Azure FHIR validation not available. Check configuration.")
                         elif not file_name.endswith('.json'):

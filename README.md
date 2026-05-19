@@ -18,13 +18,28 @@ No installation required! Upload your FHIR bundle (JSON) or CDA document (XML) a
 
 ## 📋 **Overview**
 
-This web application provides **comprehensive validation** for healthcare interoperability documents using three industry-standard validation services:
+This web application provides **comprehensive validation** for healthcare interoperability documents using **free public validation services** and optional private Azure integration:
 
-- ✅ **Azure FHIR Service** - Validates FHIR R4 bundles against Microsoft Azure Health Data Services
-- ✅ **EHDS Matchbox** - Validates FHIR IPS bundles with 21 specialized profiles
-- ✅ **Gazelle EVS** - Validates CDA documents using eHDSI and EHDS platforms (49+ validators)
+### 🌐 **Public Validators** (No Registration Required)
+- ✅ **EHDS Matchbox** - Specialized FHIR IPS validation with 21 profiles (**Default**)
+- ✅ **HAPI FHIR Public Server** - Generic FHIR R4 validation (file size limit ~50KB)
+- ✅ **Gazelle EVS** - CDA document validation using eHDSI and EHDS platforms (49+ validators)
+
+### 🔐 **Optional Private Validator**
+- 🔒 **Azure FHIR Service** - HIPAA/GDPR compliant validation (requires your Azure credentials)
 
 Perfect for developers, healthcare professionals, and organizations working with **FHIR International Patient Summary (IPS)** or **Clinical Document Architecture (CDA)** standards.
+
+---
+
+## 🎯 **Which Validator Should I Use?**
+
+| Use Case | Recommended Validator | Why? |
+|----------|---------------------|------|
+| **Testing/IPS** | 🌐 **EHDS Matchbox** (Default) | Free, IPS-specific, 21 profiles, handles large files |
+| **Small FHIR** | 🌐 **HAPI FHIR (Public)** | Free, generic FHIR, ~50KB limit |
+| **CDA Documents** | 🌐 **Gazelle EVS** | 49+ validators for eHDSI/EHDS |
+| **Production/HIPAA** | 🔒 **Azure FHIR** | Private, compliant, requires credentials |
 
 Perfect for developers, healthcare professionals, and organizations working with **FHIR International Patient Summary (IPS)** or **Clinical Document Architecture (CDA)** standards.
 
@@ -43,14 +58,37 @@ Perfect for developers, healthcare professionals, and organizations working with
   - JSON/XML format validation (shows line-specific errors)
   - Automatic format detection and validator switching
 
-### 🔍 **Three Validation Services**
+### 🔍 **Four Validation Services**
 
-#### 1. **Azure FHIR Service** (JSON Only)
-- Validates FHIR R4 resources via Azure Health Data Services
+#### 1. **EHDS Matchbox FHIR IPS Validator** (JSON Only) 🌐 **DEFAULT**
+- **FREE & Public** - No registration or API keys required
+- Specialized FHIR IPS validation with **21 profiles**:
+  - Bundle (IPS) 1.1.0 and 2.0.0
+  - Patient, AllergyIntolerance, Condition, Device, etc.
+- Validates specific IPS sections (Medication Summary, Allergies, Problem List, etc.)
+- ✅ Handles large files (tested up to 10MB)
+- Fast validation (~10 seconds)
+- Human-readable diagnostic messages
+- Best for: **IPS-specific validation** (recommended)
+
+#### 2. **HAPI FHIR Public Server** (JSON Only) 🌐 **ALTERNATIVE**
+- **FREE & Anonymous** - No registration or API keys required
+- Validates FHIR R4 resources via http://hapi.fhir.org
 - REST API-based validation
-- Best for: Generic FHIR bundle validation
+- Fast validation (<5 seconds)
+- ⚠️ **File size limit: ~50KB** (public server constraint)
+- Best for: Small FHIR resources, quick checks
+- **Not suitable for typical IPS bundles** (usually >100KB)
 
-#### 2. **EHDS Matchbox FHIR IPS Validator** (JSON Only)
+#### 3. **Azure FHIR Service** (JSON Only) 🔒 **OPTIONAL**
+- **HIPAA/GDPR compliant** - Requires your Azure credentials
+- Validates FHIR R4 resources via Azure Health Data Services
+- OAuth2-based authentication
+- Private validation in your own Azure environment
+- Best for: Production use, sensitive patient data
+- 💡 **Setup:** Provide credentials in sidebar or deploy via Docker
+
+#### 3. **EHDS Matchbox FHIR IPS Validator** (JSON Only) 🌐 **PUBLIC**
 - Specialized FHIR IPS validation with **21 profiles**:
   - Bundle (IPS) 1.1.0 and 2.0.0
   - Patient (IPS)
@@ -87,7 +125,8 @@ Perfect for developers, healthcare professionals, and organizations working with
 - Fast validation (~10 seconds)
 - Human-readable diagnostic messages
 
-#### 3. **Gazelle EVS** (XML Only)
+#### 4. **Gazelle EVS** (XML Only) 🌐 **PUBLIC**
+- **FREE & Anonymous** - No registration required
 - **Two platforms:**
   - **eHDSI Gazelle** (49 validators): Wave 7-10, Cross-border eHealth
   - **EHDS Gazelle** (32 validators): Modern HL7 EU standards
