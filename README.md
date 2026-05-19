@@ -205,6 +205,83 @@ streamlit run streamlit_app.py
 
 ---
 
+## 🐳 **Deployment Options**
+
+### **Comparison: Demo vs Production**
+
+| Feature | Streamlit Cloud (Demo) | Docker Self-Hosted (Production) |
+|---------|----------------------|--------------------------------|
+| **Deployment Complexity** | ⭐ One-click deploy | ⭐⭐ Docker knowledge required |
+| **API Keys** | ⚠️ Shared (Duncan's) | ✅ Your own |
+| **Cost** | ✅ Free | 💰 Infrastructure + API usage |
+| **Data Privacy** | ⚠️ Processed through shared accounts | ✅ Private (HIPAA/GDPR compliant) |
+| **Rate Limits** | ⚠️ Shared with all users | ✅ No sharing |
+| **Production Ready** | ❌ Demo only | ✅ Yes |
+| **Best For** | Testing, demos, prototyping | Healthcare orgs, production use |
+
+### **Option 1: Streamlit Cloud (Demo Mode)**
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://ddeveloper72-fhir-ips-validator-streamlit-app-ocgntm.streamlit.app/)
+
+✅ **No setup required** - Just click the link above  
+✅ **Free to use** - No infrastructure costs  
+⚠️ **Demo only** - Uses shared API credentials  
+⚠️ **Not for production data** - Validation processed through shared accounts
+
+**User-Provided Credentials (Hybrid Mode):**
+- Optionally provide your own API keys via the sidebar (🔑 Provide Your API Keys)
+- Keys stored in browser session only (not saved to disk)
+- Cleared when you close your browser
+- Perfect for testing with your own credentials on the demo site
+
+### **Option 2: Docker Self-Hosted (Production Mode)**
+
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://hub.docker.com/)
+
+✅ **Full control** - Deploy in your infrastructure  
+✅ **Private validation** - All data stays in your environment  
+✅ **Your API keys** - No sharing, no rate limits  
+✅ **HIPAA/GDPR compliant** - Suitable for healthcare data
+
+#### **Quick Start**
+
+```bash
+# 1. Clone repository
+git clone https://github.com/ddeveloper72/fhir-ips-validator.git
+cd fhir-ips-validator
+
+# 2. Configure credentials
+cp .env.example .env
+# Edit .env with your API keys
+
+# 3. Start with Docker Compose
+docker-compose up -d
+
+# 4. Open browser
+http://localhost:8501
+```
+
+#### **Docker Features**
+
+- ✅ Multi-stage build for minimal image size
+- ✅ Non-root user for security
+- ✅ Health checks built-in
+- ✅ Environment-based configuration
+- ✅ Volume mounting for example files
+- ✅ Ready for Kubernetes deployment
+
+#### **Full Documentation**
+
+📖 See **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** for complete guide including:
+- Prerequisites and API key setup
+- docker-compose deployment
+- Kubernetes deployment examples
+- AWS/Azure/GCP deployment guides
+- Security best practices
+- Monitoring and troubleshooting
+
+---
+
 ## 🏗️ **Architecture**
 
 ### **Validation Services**

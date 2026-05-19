@@ -475,6 +475,27 @@ Validate FHIR R4 International Patient Summary (IPS) bundles and CDA documents u
 - **EHDS Gazelle** - Modern HL7 EU standards (IPS, EU-EPS, EU Base & Core)
 """)
 
+# Check if user is using demo credentials (no user-provided keys)
+using_demo_mode = (
+    not st.session_state.get('user_azure_secret') and
+    not st.session_state.get('user_ehdsi_key') and
+    not st.session_state.get('user_ehds_key')
+)
+
+if using_demo_mode:
+    st.warning("""
+    ⚠️ **DEMO MODE** - You are using shared API credentials.
+    
+    **For production use:**
+    - Provide your own API keys in the sidebar (🔑 Provide Your API Keys)
+    - Or deploy your own instance using Docker (see [README](https://github.com/ddeveloper72/fhir-ips-validator#-docker-deployment))
+    
+    **Limitations in demo mode:**
+    - Shared rate limits with all users
+    - Your validation data is processed through shared accounts
+    - Not suitable for production or sensitive data
+    """)
+
 st.divider()  # Horizontal line
 
 
@@ -491,23 +512,152 @@ ehds_configured = bool(os.getenv('EHDS_GAZELLE_API_KEY'))
 
 # Show configuration status
 st.sidebar.subheader("🔐 Authentication Status")
+
+# Initialize session state for user-provided credentials
+if 'user_azure_secret' not in st.session_state:
+    st.session_state['user_azure_secret'] = ''
+if 'user_ehdsi_key' not in st.session_state:
+    st.session_state['user_ehdsi_key'] = ''
+if 'user_ehds_key' not in st.session_state:
+    st.session_state['user_ehds_key'] = ''
+
+# Check both environment and user-provided credentials
+azure_env_configured = bool(os.getenv('AZURE_FHIR_BASE_URL'))
+azure_configured = azure_env_configured or bool(st.session_state.get('user_azure_secret'))
+
+ehdsi_env_configured = bool(os.getenv('EVS_API_KEY'))
+ehdsi_configured = ehdsi_env_configured or bool(st.session_state.get('user_ehdsi_key'))
+
+ehds_env_configured = bool(os.getenv('EHDS_GAZELLE_API_KEY'))
+ehds_configured = ehds_env_configured or bool(st.session_state.get('user_ehds_key'))
+
 if azure_configured:
     st.sidebar.success("✅ Azure FHIR configured")
 else:
     st.sidebar.warning("⚠️ Azure FHIR not configured")
-    st.sidebar.caption("Set AZURE_FHIR_BASE_URL in .env")
 
 if ehdsi_configured:
     st.sidebar.success("✅ eHDSI Gazelle configured")
 else:
     st.sidebar.warning("⚠️ eHDSI Gazelle not configured")
-    st.sidebar.caption("Set EVS_API_KEY in .env")
 
 if ehds_configured:
     st.sidebar.success("✅ EHDS Gazelle configured")
 else:
     st.sidebar.warning("⚠️ EHDS Gazelle not configured")
-    st.sidebar.caption("Set EHDS_GAZELLE_API_KEY in .env")
+
+# Add user credential input section
+with st.sidebar.expander("🔑 Provide Your API Keys", expanded=False):
+    st.markdown("""
+    **Optional:** Provide your own API credentials for validation services.
+    
+    ⚠️ **Privacy Note:**
+    - Keys are stored in your browser session only
+    - Not saved to disk or database
+    - Cleared when you close your browser
+    - Never shared or logged
+    """)
+    
+    st.markdown("---")
+    
+    # Azure FHIR Credentials
+    st.markdown("**Azure FHIR Service**")
+    user_azure_base = st.text_input(
+        "Azure FHIR Base URL",
+        value=st.session_state.get('user_azure_base', ''),
+        placeholder="your-fhir-service.fhir.azurehealthcareapis.com",
+        help="Your Azure FHIR service endpoint",
+        key="input_azure_base"
+    )
+    user_azure_client_id = st.text_input(
+        "Azure Client ID",
+        value=st.session_state.get('user_azure_client_id', ''),
+        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        help="Service Principal Client ID",
+        key="input_azure_client_id"
+    )
+    user_azure_secret = st.text_input(
+        "Azure Client Secret",
+        value="",
+        type="password",
+        placeholder="Enter your secret...",
+        help="Service Principal Secret (not stored)",
+        key="input_azure_secret"
+    )
+    user_azure_tenant = st.text_input(
+        "Azure Tenant ID",
+        value=st.session_state.get('user_azure_tenant', ''),
+        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        help="Azure AD Tenant ID",
+        key="input_azure_tenant"
+    )
+    
+    st.markdown("---")
+    
+    # eHDSI Gazelle Credentials
+    st.markdown("**eHDSI Gazelle**")
+    user_ehdsi_key = st.text_input(
+        "eHDSI API Key",
+        value="",
+        type="password",
+        placeholder="Enter your API key...",
+        help="From gazelle.ehdsi.eu (not stored)",
+        key="input_ehdsi_key"
+    )
+    
+    st.markdown("---")
+    
+    # EHDS Gazelle Credentials
+    st.markdown("**EHDS Gazelle**")
+    user_ehds_key = st.text_input(
+        "EHDS API Key",
+        value="",
+        type="password",
+        placeholder="Enter your API key...",
+        help="From ehds.gazelle-platform.net (not stored)",
+        key="input_ehds_key"
+    )
+    
+    st.markdown("---")
+    
+    # Apply button to save credentials to session state
+    if st.button("💾 Apply Credentials", use_container_width=True):
+        # Store in session state
+        if user_azure_base:
+            st.session_state['user_azure_base'] = user_azure_base
+            os.environ['AZURE_FHIR_BASE_URL'] = user_azure_base
+        if user_azure_client_id:
+            st.session_state['user_azure_client_id'] = user_azure_client_id
+            os.environ['AZURE_FHIR_CLIENT_ID'] = user_azure_client_id
+        if user_azure_secret:
+            st.session_state['user_azure_secret'] = user_azure_secret
+            os.environ['AZURE_FHIR_CLIENT_SECRET'] = user_azure_secret
+        if user_azure_tenant:
+            st.session_state['user_azure_tenant'] = user_azure_tenant
+            os.environ['AZURE_FHIR_TENANT_ID'] = user_azure_tenant
+        if user_ehdsi_key:
+            st.session_state['user_ehdsi_key'] = user_ehdsi_key
+            os.environ['EVS_API_KEY'] = user_ehdsi_key
+        if user_ehds_key:
+            st.session_state['user_ehds_key'] = user_ehds_key
+            os.environ['EHDS_GAZELLE_API_KEY'] = user_ehds_key
+        
+        st.success("✅ Credentials applied to current session!")
+        st.info("💡 These credentials will be used for validation until you close your browser.")
+        st.rerun()
+    
+    # Clear credentials button
+    if st.button("🗑️ Clear Session Credentials", use_container_width=True):
+        # Clear session state
+        st.session_state['user_azure_base'] = ''
+        st.session_state['user_azure_client_id'] = ''
+        st.session_state['user_azure_secret'] = ''
+        st.session_state['user_azure_tenant'] = ''
+        st.session_state['user_ehdsi_key'] = ''
+        st.session_state['user_ehds_key'] = ''
+        
+        st.success("✅ Session credentials cleared!")
+        st.rerun()
 
 st.sidebar.divider()
 
