@@ -20,16 +20,27 @@ import os
 import sys
 import json
 import tempfile
+import hashlib
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit as st
 from dotenv import load_dotenv
+import time
+import traceback
 
 # Add scripts directory to path so we can import validation functions
 sys.path.insert(0, str(Path(__file__).parent / "scripts"))
 
 # Load environment variables
 load_dotenv()
+
+# ============================================================================
+# CONFIGURATION & CONSTANTS
+# ============================================================================
+MAX_FILE_SIZE_MB = 10
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+API_TIMEOUT_SECONDS = 60
+CACHE_DURATION_SECONDS = 3600  # 1 hour
 
 # Import validation functions from existing scripts
 try:
@@ -66,10 +77,182 @@ except ImportError as e:
 
 
 # ============================================================================
-# HELPER FUNCTIONS - Matchbox Response Parsing
+# HELPER FUNCTIONS - Validation & Error Handling
 # ============================================================================
 
 import re
+
+def validate_required_secrets():
+    """
+    Validate that all required secrets are configured.
+    Returns dict with configuration status and missing keys.
+    """
+    required_secrets = {
+        'azure': ['AZURE_FHIR_BASE_URL', 'AZURE_FHIR_CLIENT_ID', 'AZURE_FHIR_CLIENT_SECRET', 'AZURE_FHIR_TENANT_ID'],
+        'ehdsi': ['EVS_API_KEY', 'EVS_BASE_URL'],
+        'ehds': ['EHDS_GAZELLE_API_KEY', 'EHDS_GAZELLE_BASE_URL']
+    }
+    
+    status = {}
+    missing = {}
+    
+    for service, keys in required_secrets.items():
+        missing_keys = [key for key in keys if not os.getenv(key)]
+        status[service] = len(missing_keys) == 0
+        if missing_keys:
+            missing[service] = missing_keys
+    
+    return status, missing
+
+def check_api_key_expiry():
+    """
+    Check if API keys are close to expiry.
+    Returns dict with warnings for keys expiring in < 7 days.
+    """
+    warnings = []
+    
+    # Check eHDSI key expiry
+    ehdsi_expiry = os.getenv('EVS_API_KEY_EXPIRY_DATE')
+    if ehdsi_expiry:
+        try:
+            expiry_date = datetime.strptime(ehdsi_expiry.split()[0], '%m/%d/%y')
+            days_until_expiry = (expiry_date - datetime.now()).days
+            if days_until_expiry < 7:
+                warnings.append(f"eHDSI API key expires in {days_until_expiry} days")
+        except:
+            pass
+    
+    # Check EHDS key expiry
+    ehds_expiry = os.getenv('EHDS_GAZELLE_API_KEY_EXPIRY_DATE')
+    if ehds_expiry:
+        try:
+            expiry_date = datetime.strptime(ehds_expiry.split()[0], '%m/%d/%y')
+            days_until_expiry = (expiry_date - datetime.now()).days
+            if days_until_expiry < 7:
+                warnings.append(f"EHDS API key expires in {days_until_expiry} days")
+        except:
+            pass
+    
+    return warnings
+
+def validate_file_size(file_obj) -> tuple:
+    """
+    Validate uploaded file size.
+    Returns (is_valid: bool, size_bytes: int, error_message: str)
+    """
+    try:
+        # Get file size
+        if hasattr(file_obj, 'size'):
+            size = file_obj.size
+        else:
+            content = file_obj.read()
+            size = len(content)
+            file_obj.seek(0)  # Reset
+        
+        if size == 0:
+            return False, 0, "File is empty. Please upload a valid document."
+        
+        if size > MAX_FILE_SIZE_BYTES:
+            size_mb = size / (1024 * 1024)
+            return False, size, f"File too large ({size_mb:.1f}MB). Maximum size is {MAX_FILE_SIZE_MB}MB."
+        
+        return True, size, ""
+    except Exception as e:
+        return False, 0, f"Error reading file: {str(e)}"
+
+def validate_json_format(content: str) -> tuple:
+    """
+    Validate JSON format and structure.
+    Returns (is_valid: bool, data: dict, error_message: str)
+    """
+    try:
+        data = json.loads(content)
+        
+        # Check if it's a FHIR resource
+        if not isinstance(data, dict):
+            return False, None, "Invalid JSON: Expected a JSON object, got array or primitive."
+        
+        if 'resourceType' not in data:
+            return False, None, "Not a FHIR resource: Missing 'resourceType' field."
+        
+        return True, data, ""
+    except json.JSONDecodeError as e:
+        return False, None, f"Invalid JSON format at line {e.lineno}, column {e.colno}: {e.msg}"
+    except Exception as e:
+        return False, None, f"Error parsing JSON: {str(e)}"
+
+def validate_xml_format(content: str) -> tuple:
+    """
+    Validate XML format and structure.
+    Returns (is_valid: bool, error_message: str)
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(content)
+        return True, ""
+    except ET.ParseError as e:
+        return False, f"Invalid XML format at line {e.position[0]}: {e.msg}"
+    except Exception as e:
+        return False, f"Error parsing XML: {str(e)}"
+
+def compute_file_hash(content: bytes) -> str:
+    """
+    Compute SHA-256 hash of file content for caching.
+    """
+    return hashlib.sha256(content).hexdigest()[:16]
+
+def safe_api_call(func, *args, timeout=API_TIMEOUT_SECONDS, **kwargs):
+    """
+    Wrapper for API calls with timeout and error handling.
+    Returns (success: bool, result: any, error_message: str)
+    """
+    import signal
+    
+    try:
+        # Note: signal.alarm only works on Unix, for cross-platform use threading
+        import threading
+        
+        result = [None]
+        exception = [None]
+        
+        def target():
+            try:
+                result[0] = func(*args, **kwargs)
+            except Exception as e:
+                exception[0] = e
+        
+        thread = threading.Thread(target=target)
+        thread.daemon = True
+        thread.start()
+        thread.join(timeout=timeout)
+        
+        if thread.is_alive():
+            return False, None, f"API call timed out after {timeout} seconds. Please try again."
+        
+        if exception[0]:
+            raise exception[0]
+        
+        return True, result[0], ""
+    
+    except ConnectionError as e:
+        return False, None, f"Network error: Unable to connect to API. Please check your internet connection."
+    except TimeoutError as e:
+        return False, None, f"Request timed out. The service may be experiencing high load. Please try again."
+    except Exception as e:
+        error_msg = str(e)
+        if 'rate limit' in error_msg.lower() or '429' in error_msg:
+            return False, None, "Rate limit exceeded. Please wait 60 seconds before trying again."
+        elif 'unauthorized' in error_msg.lower() or '401' in error_msg:
+            return False, None, "Authentication failed. Please check your API credentials."
+        elif 'forbidden' in error_msg.lower() or '403' in error_msg:
+            return False, None, "Access denied. Your API key may have expired or lacks permissions."
+        else:
+            return False, None, f"API error: {error_msg}"
+
+
+# ============================================================================
+# HELPER FUNCTIONS - Matchbox Response Parsing
+# ============================================================================
 
 def parse_matchbox_diagnostic(diagnostics: str) -> dict:
     """
