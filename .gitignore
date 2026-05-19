@@ -91,13 +91,38 @@ site/
 
 # Validation Results & Output Files
 validation_reports/
+validation_results/
+output/
 *.validation.json
 *.validation.xml
+*.validation.html
 azure_validation_*.json
 validation_response_*.html
 *_discovery_results.json
 validator_page.html
 evs_discovery_results.json
+fhir_r4_discovery_results.json
+
+# API Exploration & Debug Files
+*_exploration/
+api_exploration_*.json
+debug_*.html
+debug_*.json
+
+# Report Files (Gazelle & general)
+report_*.html
+report_*.json
+report_*.xml
+gazelle_*.html
+gazelle_*.xml
+parsed_validations.json
+oid_analysis.txt
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
 fhir_r4_discovery_results.json
 
 # Temporary/Test Files
