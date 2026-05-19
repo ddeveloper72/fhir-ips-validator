@@ -39,6 +39,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2 \
     libxslt1.1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder
