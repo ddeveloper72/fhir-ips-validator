@@ -42,6 +42,10 @@ credentials.json
 api_keys.txt
 secrets/
 
+# Streamlit secrets (keep example only)
+.streamlit/secrets.toml
+!.streamlit/secrets.toml.example
+
 # Testing
 .pytest_cache/
 .coverage
